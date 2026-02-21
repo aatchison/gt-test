@@ -1,11 +1,6 @@
 {
   "name": "Next.js Full-Stack",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
-    }
-  },
   "forwardPorts": [3000],
   "postCreateCommand": "npm install",
   "customizations": {

@@ -5,6 +5,11 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
+// Precomputed hash used when the email is not found, to prevent timing attacks
+// that could reveal whether an account exists for a given email.
+const DUMMY_HASH =
+  "$2a$12$LHDiLCLdUmEWBMIw4GfMsOf9eGlpJeprjPE7bFJuN4cTHrIv6xzq6";
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -16,20 +21,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        // Normalize email so login works regardless of capitalisation
+        const normalizedEmail = (credentials.email as string)
+          .trim()
+          .toLowerCase();
+
         const user = await db
           .select()
           .from(users)
-          .where(eq(users.email, credentials.email as string))
+          .where(eq(users.email, normalizedEmail))
           .get();
 
-        if (!user?.passwordHash) return null;
-
+        // Always run bcrypt.compare to prevent timing-based user enumeration
         const valid = await bcrypt.compare(
           credentials.password as string,
-          user.passwordHash
+          user?.passwordHash ?? DUMMY_HASH
         );
 
-        if (!valid) return null;
+        if (!user || !valid) return null;
 
         return {
           id: user.id,

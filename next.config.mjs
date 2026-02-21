@@ -11,8 +11,11 @@ const nextConfig = {
         source: "/(.*)",
         headers: [
           {
+            // DENY matches CSP frame-ancestors 'none' below; both are needed
+            // for full browser coverage (legacy browsers honour X-Frame-Options,
+            // modern browsers honour CSP frame-ancestors).
             key: "X-Frame-Options",
-            value: "SAMEORIGIN",
+            value: "DENY",
           },
           {
             key: "X-Content-Type-Options",

@@ -5,7 +5,9 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
-  const { name, email, password } = await req.json();
+  const { name, email: rawEmail, password } = await req.json();
+  const email =
+    typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
 
   if (!email || !password) {
     return NextResponse.json(

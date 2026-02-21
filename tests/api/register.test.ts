@@ -50,12 +50,10 @@ describe("POST /api/register", () => {
     expect(data.error).toMatch(/already exists/);
   });
 
-  it("email comparison is case-insensitive when duplicate", async () => {
+  it("email is normalised to lowercase on registration so mixed-case duplicates are rejected", async () => {
     await POST(makeRequest({ email: "alice@example.com", password: "password123" }));
-    // Same email, different case — SQLite UNIQUE on TEXT is case-sensitive by default,
-    // so this should succeed. Document the actual behavior.
+    // ALICE@example.com is normalised to alice@example.com → duplicate → 409
     const res = await POST(makeRequest({ email: "ALICE@example.com", password: "password123" }));
-    // SQLite TEXT unique is case-sensitive: ALICE@ != alice@ → 201
-    expect([201, 409]).toContain(res.status);
+    expect(res.status).toBe(409);
   });
 });

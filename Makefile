@@ -1,5 +1,5 @@
 .PHONY: help setup env install playwright-install \
-        dev build start lint \
+        dev build start lint typecheck audit \
         test test-watch \
         test-e2e test-e2e-ui test-e2e-headed test-all \
         db-generate db-migrate db-studio \
@@ -49,6 +49,12 @@ start: ## Start the production server (requires build first)
 
 lint: ## Run ESLint
 	npm run lint
+
+typecheck: ## Run TypeScript type-check (no emit)
+	npx tsc --noEmit
+
+audit: ## Run npm security audit on production deps (fails on critical)
+	npm audit --audit-level=critical --omit=dev
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 

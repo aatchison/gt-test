@@ -1,0 +1,79 @@
+.PHONY: help install dev build start lint \
+        test test-watch \
+        test-e2e test-e2e-ui test-e2e-headed test-all \
+        db-generate db-migrate db-studio \
+        devpod-up devpod-ssh devpod-rebuild \
+        clean
+
+# Default target
+.DEFAULT_GOAL := help
+
+help: ## Show available targets
+	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
+		| sed 's/:.*## /\t/' \
+		| awk -F'\t' '{printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
+
+# ── Dependencies ─────────────────────────────────────────────────────────────
+
+install: ## Install npm dependencies
+	npm install
+
+# ── Development ──────────────────────────────────────────────────────────────
+
+dev: ## Start the development server (http://localhost:3000)
+	npm run dev
+
+build: ## Build for production
+	npm run build
+
+start: ## Start the production server (requires build first)
+	npm run start
+
+lint: ## Run ESLint
+	npm run lint
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+
+test: ## Run Vitest API integration tests
+	npm test
+
+test-watch: ## Run Vitest in watch mode
+	npm run test:watch
+
+test-e2e: ## Run Playwright E2E tests (headless)
+	npm run test:e2e
+
+test-e2e-ui: ## Open Playwright interactive UI
+	npm run test:e2e:ui
+
+test-e2e-headed: ## Run Playwright E2E tests with visible browser
+	npm run test:e2e:headed
+
+test-all: test test-e2e ## Run all tests (Vitest + Playwright)
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+db-generate: ## Generate Drizzle migration files from schema changes
+	npm run db:generate
+
+db-migrate: ## Apply pending Drizzle migrations
+	npm run db:migrate
+
+db-studio: ## Open Drizzle Studio (visual database browser)
+	npm run db:studio
+
+# ── DevPod ────────────────────────────────────────────────────────────────────
+
+devpod-up: ## Start (or resume) the DevPod container
+	devpod-cli up . --provider docker --ide none
+
+devpod-rebuild: ## Rebuild the DevPod container from scratch
+	devpod-cli up . --provider docker --ide none --recreate
+
+devpod-ssh: ## SSH into the running DevPod container
+	ssh rig.devpod
+
+# ── Housekeeping ──────────────────────────────────────────────────────────────
+
+clean: ## Remove build artifacts and caches
+	rm -rf .next out playwright-report test-results node_modules/.cache

@@ -13,6 +13,14 @@ interface Window {
 const store = new Map<string, Window>();
 
 /**
+ * Clear all rate-limit counters. Call this in test teardown to prevent
+ * in-process state from leaking between test cases.
+ */
+export function clearRateLimitStore(): void {
+  store.clear();
+}
+
+/**
  * Check whether `key` has exceeded `limit` requests within `windowMs`.
  *
  * Returns `true` if the request is allowed, `false` if it should be blocked.

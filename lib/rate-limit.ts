@@ -35,3 +35,8 @@ export function checkRateLimit(
   entry.count++;
   return true;
 }
+
+/** Clear all rate-limit state. Intended for use in tests only. */
+export function clearRateLimitStore(): void {
+  store.clear();
+}

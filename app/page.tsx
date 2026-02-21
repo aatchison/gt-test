@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import Link from "next/link";
 
 export default async function Home() {
@@ -15,12 +15,19 @@ export default async function Home() {
             <p className="text-sm text-gray-600">
               Signed in as <strong>{session.user.email}</strong>
             </p>
-            <Link
-              href="/api/auth/signout"
-              className="inline-block px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
             >
-              Sign out
-            </Link>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Sign out
+              </button>
+            </form>
           </div>
         ) : (
           <div className="flex gap-3 justify-center">

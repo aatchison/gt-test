@@ -17,27 +17,27 @@ async function seedUser(email: string, password: string) {
 
 describe("Registration → DB state", () => {
   it("user is persisted and retrievable after registration", async () => {
-    await seedUser("bob@example.com", "securepassword");
+    await seedUser("bob@example.com", "SecurePass123!");
 
     // Verify the user exists by attempting to re-register (expect 409)
     const req = new NextRequest("http://localhost/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "bob@example.com", password: "securepassword" }),
+      body: JSON.stringify({ email: "bob@example.com", password: "SecurePass123!" }),
     });
     const res = await register(req);
     expect(res.status).toBe(409);
   });
 
   it("password is not stored in plaintext", async () => {
-    await seedUser("carol@example.com", "mypassword99");
+    await seedUser("carol@example.com", "MyPassword99!");
 
     // Verify by checking the user is retrievable (409 on dup) but not testing raw DB value here.
     // The bcrypt.hash call in the route ensures hashing — this is a smoke check.
     const req = new NextRequest("http://localhost/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "carol@example.com", password: "differentpassword" }),
+      body: JSON.stringify({ email: "carol@example.com", password: "DifferentPass1!" }),
     });
     const res = await register(req);
     expect(res.status).toBe(409); // user exists → duplicate, not auth error
@@ -46,7 +46,7 @@ describe("Registration → DB state", () => {
 
 describe("NextAuth credentials authorize", () => {
   const TEST_EMAIL = "dave@example.com";
-  const TEST_PASSWORD = "testpassword1";
+  const TEST_PASSWORD = "TestPassword1!";
 
   beforeEach(async () => {
     await seedUser(TEST_EMAIL, TEST_PASSWORD);

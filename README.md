@@ -21,31 +21,25 @@ A full-stack Next.js 14 web application with authentication and SQLite.
 # Add the Docker provider (first time only)
 devpod-cli provider add docker
 
-# Start the dev environment — installs deps and Playwright automatically
+# Start the container
 make devpod-up
 
 # SSH into the container
 make devpod-ssh
 ```
 
-All subsequent commands are run **inside the container**.
+Once inside the container, run first-time setup:
+
+```bash
+make setup
+```
+
+This creates `.env` with a generated `AUTH_SECRET`, installs npm packages, and installs the Playwright Chromium browser.
 
 ### 2. Without DevPod
 
 ```bash
-make install
-```
-
-### Environment setup
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and set `AUTH_SECRET`:
-
-```bash
-openssl rand -base64 32
+make setup
 ```
 
 ---
@@ -55,6 +49,9 @@ openssl rand -base64 32
 Run `make` (no arguments) to list all available targets:
 
 ```
+  setup                  Full first-time setup (env + deps + browsers)
+  env                    Copy .env.example → .env and generate AUTH_SECRET
+  playwright-install     Install Playwright browsers and system dependencies
   install                Install npm dependencies
   dev                    Start the development server (http://localhost:3000)
   build                  Build for production
@@ -77,11 +74,19 @@ Run `make` (no arguments) to list all available targets:
 
 ### Common workflows
 
-**Start developing:**
+**Start developing (first time):**
 ```bash
 make devpod-up    # start container (host)
 make devpod-ssh   # enter container (host)
+make setup        # install deps, generate .env, install Playwright
 make dev          # start dev server (inside container)
+```
+
+**Resume after restart:**
+```bash
+make devpod-up    # resume container
+make devpod-ssh   # enter container
+make dev          # deps already installed
 ```
 
 **Run tests:**

@@ -1,4 +1,5 @@
-.PHONY: help install dev build start lint \
+.PHONY: help setup env install playwright-install \
+        dev build start lint \
         test test-watch \
         test-e2e test-e2e-ui test-e2e-headed test-all \
         db-generate db-migrate db-studio \
@@ -12,6 +13,23 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
 		| sed 's/:.*## /\t/' \
 		| awk -F'\t' '{printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
+
+# ── Setup ─────────────────────────────────────────────────────────────────────
+
+setup: env install playwright-install ## Full first-time setup (env + deps + browsers)
+
+env: ## Copy .env.example → .env and generate AUTH_SECRET (skips if .env exists)
+	@if [ -f .env ]; then \
+		echo ".env already exists, skipping."; \
+	else \
+		cp .env.example .env; \
+		SECRET=$$(openssl rand -base64 32); \
+		sed -i "s|your-secret-here|$$SECRET|" .env; \
+		echo "Created .env with a generated AUTH_SECRET."; \
+	fi
+
+playwright-install: ## Install Playwright browsers and system dependencies
+	npx playwright install chromium --with-deps
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
 

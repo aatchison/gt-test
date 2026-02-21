@@ -2,7 +2,6 @@
   "name": "Next.js Full-Stack",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
   "forwardPorts": [3000, 3001],
-  "postCreateCommand": "npm install && npx playwright install chromium --with-deps",
   "customizations": {
     "vscode": {
       "extensions": [

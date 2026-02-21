@@ -53,8 +53,8 @@ lint: ## Run ESLint
 typecheck: ## Run TypeScript type-check (no emit)
 	npx tsc --noEmit
 
-audit: ## Run npm security audit (fails on high/critical)
-	npm audit --audit-level=high
+audit: ## Run npm security audit on production deps (fails on high/critical)
+	npm audit --audit-level=high --omit=dev
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 

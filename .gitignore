@@ -16,9 +16,13 @@ build/
 .env.*.local
 
 # database
-local.db
-local.db-shm
-local.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# test artifacts
+test-results/
+playwright-report/
 
 # drizzle generated (optional — some teams commit this)
 # drizzle/

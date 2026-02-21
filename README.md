@@ -2,6 +2,8 @@
 
 A full-stack Next.js 14 web application with authentication and SQLite.
 
+<!-- ci validation -->
+
 **Stack:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · NextAuth.js v5 · Drizzle ORM · SQLite (better-sqlite3)
 
 ---

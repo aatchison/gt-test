@@ -11,7 +11,7 @@ test.describe("Register flow", () => {
     await page.goto("/register");
 
     await page.getByLabel("Email").fill("newuser@example.com");
-    await page.getByLabel("Password").fill("newpassword1");
+    await page.getByLabel("Password").fill("NewPassword123!");
     await page.getByRole("button", { name: "Create account" }).click();
 
     await expect(page).toHaveURL("/login");
@@ -22,7 +22,7 @@ test.describe("Register flow", () => {
 
     // E2E_USER is seeded in global-setup
     await page.getByLabel("Email").fill(E2E_USER.email);
-    await page.getByLabel("Password").fill("somepassword1");
+    await page.getByLabel("Password").fill("SomePassword1!");
     await page.getByRole("button", { name: "Create account" }).click();
 
     await expect(page.getByText(/already exists/i)).toBeVisible();
@@ -62,7 +62,7 @@ test.describe("Login flow", () => {
     await page.goto("/login");
 
     await page.getByLabel("Email").fill("nobody@example.com");
-    await page.getByLabel("Password").fill("somepassword1");
+    await page.getByLabel("Password").fill("SomePassword1!");
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page.getByText(/invalid email or password/i)).toBeVisible();

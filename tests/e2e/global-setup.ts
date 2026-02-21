@@ -6,7 +6,7 @@ const E2E_DB = process.env.E2E_DATABASE_URL ?? "./e2e.db";
 
 export const E2E_USER = {
   email: "e2e@example.com",
-  password: "e2epassword1",
+  password: "E2ePassword123!",
   name: "E2E User",
 };
 

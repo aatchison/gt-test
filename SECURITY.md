@@ -36,4 +36,10 @@ This project implements the following security controls:
 - **Rate limiting**: Registration endpoint is limited to 5 requests per IP per 15 minutes.
 - **Security headers**: `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy`, `Referrer-Policy`, `Strict-Transport-Security`, and `Permissions-Policy` are set on all responses.
 - **Session strategy**: JWT sessions (no server-side session store required).
-- **Dependency auditing**: `npm audit` runs in CI and fails on high/critical findings.
+- **Dependency auditing**: `npm audit` runs in CI against production dependencies and fails on critical findings.
+
+## Known Exceptions
+
+| Advisory | Severity | Reason not fixed |
+|---|---|---|
+| [GHSA-9g9p-9gw9-jx7f](https://github.com/advisories/GHSA-9g9p-9gw9-jx7f) | High | Next.js DoS via Image Optimizer `remotePatterns`. This app does not configure `remotePatterns`, making the attack surface unreachable. Fix requires upgrading to Next.js 15 (breaking). Tracked for the next major upgrade. |

@@ -76,7 +76,7 @@ export default function RegisterPage() {
               name="password"
               type="password"
               required
-              minLength={8}
+              minLength={12}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

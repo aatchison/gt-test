@@ -5,9 +5,20 @@
 import { execSync } from "child_process";
 
 export default async function globalSetup() {
+  const namespace = process.env.KIND_NS ?? "gttest";
+  const deployment = process.env.KIND_RELEASE ?? "gttest-app";
+
   console.log("Seeding E2E user into kind deployment...");
-  execSync(
-    "kubectl exec -n gttest deployment/gttest-app -- node /app/scripts/kind-seed.mjs",
-    { stdio: "inherit" },
-  );
+  try {
+    execSync(
+      `kubectl exec -n ${namespace} deployment/${deployment} -- node /app/scripts/kind-seed.mjs`,
+      { stdio: "inherit", timeout: 60_000 },
+    );
+  } catch (error) {
+    console.error(
+      `Failed to seed E2E user via 'kubectl exec -n ${namespace} deployment/${deployment}'. ` +
+        "The command may have failed or timed out.",
+    );
+    throw error;
+  }
 }

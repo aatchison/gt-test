@@ -14,6 +14,7 @@
 .DEFAULT_GOAL := help
 
 KIND_APP_IMAGE := gttest-app:local
+KIND_CLUSTER   := gttest
 KIND_NS        := gttest
 
 help: ## Show available targets
@@ -110,10 +111,10 @@ kind-create: ## Create local kind cluster
 	kind create cluster --config kind-config.yaml
 
 kind-delete: ## Delete local kind cluster
-	kind delete cluster --name gttest
+	kind delete cluster --name $(KIND_CLUSTER)
 
 kind-status: ## Show cluster info
-	kubectl cluster-info --context kind-gttest
+	kubectl cluster-info --context kind-$(KIND_CLUSTER)
 
 kind-reset: kind-delete kind-create ## Delete and recreate cluster
 
@@ -123,7 +124,7 @@ kind-build: ## Build the app Docker image
 	docker build -t $(KIND_APP_IMAGE) .
 
 kind-load: ## Load the app image into the kind cluster
-	kind load docker-image $(KIND_APP_IMAGE) --name gttest
+	kind load docker-image $(KIND_APP_IMAGE) --name $(KIND_CLUSTER)
 
 kind-apply: ## Apply Kubernetes manifests (namespace + deployment + service)
 	kubectl apply -f k8s/

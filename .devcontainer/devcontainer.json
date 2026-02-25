@@ -13,7 +13,7 @@
       "minikube": "none"
     }
   },
-  "postCreateCommand": "curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-amd64 && chmod +x /tmp/kind && sudo mv /tmp/kind /usr/local/bin/kind",
+  "postCreateCommand": "set -euo pipefail && KIND_VERSION=v0.27.0 && BASE_URL=\"https://kind.sigs.k8s.io/dl/${KIND_VERSION}\" && curl --fail --location --silent --show-error -o /tmp/kind \"${BASE_URL}/kind-linux-amd64\" && curl --fail --location --silent --show-error -o /tmp/kind-linux-amd64.sha256sum \"${BASE_URL}/kind-linux-amd64.sha256sum\" && (cd /tmp && sha256sum -c kind-linux-amd64.sha256sum) && chmod +x /tmp/kind && sudo mv /tmp/kind /usr/local/bin/kind",
   "forwardPorts": [3000, 3001],
   "customizations": {
     "vscode": {

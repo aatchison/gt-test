@@ -4,6 +4,7 @@
         test-e2e test-e2e-ui test-e2e-headed test-all \
         db-generate db-migrate db-studio \
         devpod-up devpod-ssh devpod-rebuild \
+        kind-create kind-delete kind-status kind-reset \
         clean
 
 # Default target
@@ -96,6 +97,19 @@ devpod-rebuild: ## Rebuild the DevPod container from scratch
 
 devpod-ssh: ## SSH into the running DevPod container
 	ssh rig.devpod
+
+# ── Kubernetes (kind) ─────────────────────────────────────────────────────────
+
+kind-create: ## Create local kind cluster
+	kind create cluster --config kind-config.yaml
+
+kind-delete: ## Delete local kind cluster
+	kind delete cluster --name gttest
+
+kind-status: ## Show cluster info
+	kubectl cluster-info --context kind-gttest
+
+kind-reset: kind-delete kind-create ## Delete and recreate cluster
 
 # ── Housekeeping ──────────────────────────────────────────────────────────────
 

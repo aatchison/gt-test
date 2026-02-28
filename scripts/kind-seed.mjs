@@ -19,7 +19,7 @@ db.exec(`
 `);
 
 // Insert the known E2E test user (matches tests/e2e/global-setup.ts)
-const passwordHash = bcrypt.hashSync("E2ePassword123!", 12);
+const passwordHash = await bcrypt.hash("E2ePassword123!", 12);
 db.prepare(`
   INSERT INTO users (id, name, email, password_hash, created_at)
   VALUES (?, ?, ?, ?, ?)

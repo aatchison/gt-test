@@ -22,6 +22,11 @@ function startNext() {
     process.on(signal, () => child.pid && child.kill(signal));
   }
 
+  child.on("error", (err) => {
+    console.error("Failed to start Next.js:", err);
+    process.exit(1);
+  });
+
   child.on("exit", (code, signal) => {
     if (signal) {
       process.kill(process.pid, signal);

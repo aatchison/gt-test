@@ -37,13 +37,15 @@ db.exec(`
     token_type TEXT,
     scope TEXT,
     id_token TEXT,
-    session_state TEXT
+    session_state TEXT,
+    PRIMARY KEY (provider, provider_account_id)
   );
 
   CREATE TABLE IF NOT EXISTS verification_tokens (
     identifier TEXT NOT NULL,
     token TEXT NOT NULL,
-    expires INTEGER NOT NULL
+    expires INTEGER NOT NULL,
+    PRIMARY KEY (identifier, token)
   );
 `);
 

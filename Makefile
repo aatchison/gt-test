@@ -4,10 +4,19 @@
         test-e2e test-e2e-ui test-e2e-headed test-all \
         db-generate db-migrate db-studio \
         devpod-up devpod-ssh devpod-rebuild \
+        kind-create kind-delete kind-status kind-reset \
+        kind-build kind-load kind-apply kind-rollout kind-deploy \
+        kind-seed kind-test kind-test-e2e kind-test-all \
+        kind-logs kind-teardown \
         clean
 
 # Default target
 .DEFAULT_GOAL := help
+
+KIND_APP_IMAGE   := gttest-app:local
+KIND_CLUSTER     := gttest
+KIND_NS          := gttest
+KIND_DEPLOYMENT  := gttest-app
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -96,6 +105,54 @@ devpod-rebuild: ## Rebuild the DevPod container from scratch
 
 devpod-ssh: ## SSH into the running DevPod container
 	ssh rig.devpod
+
+# ── Kubernetes (kind) — cluster lifecycle ─────────────────────────────────────
+
+kind-create: ## Create local kind cluster
+	kind create cluster --config kind-config.yaml
+
+kind-delete: ## Delete local kind cluster
+	kind delete cluster --name $(KIND_CLUSTER)
+
+kind-status: ## Show cluster info
+	kubectl cluster-info --context kind-$(KIND_CLUSTER)
+
+kind-reset: kind-delete kind-create ## Delete and recreate cluster
+
+# ── Kubernetes (kind) — app deployment ────────────────────────────────────────
+
+kind-build: ## Build the app Docker image
+	docker build -t $(KIND_APP_IMAGE) .
+
+kind-load: ## Load the app image into the kind cluster
+	kind load docker-image $(KIND_APP_IMAGE) --name $(KIND_CLUSTER)
+
+kind-apply: ## Apply Kubernetes manifests (namespace + deployment + service)
+	kubectl apply -f k8s/
+
+kind-rollout: ## Wait for the app deployment to become ready
+	kubectl rollout status deployment/$(KIND_DEPLOYMENT) -n $(KIND_NS) --timeout=120s
+
+kind-deploy: kind-build kind-load kind-apply kind-rollout ## Full deploy: build → load → apply → wait
+
+kind-logs: ## Tail app logs from the running pod
+	kubectl logs -n $(KIND_NS) deployment/$(KIND_DEPLOYMENT) -f
+
+kind-teardown: ## Remove all deployed Kubernetes resources
+	kubectl delete -f k8s/ --ignore-not-found
+
+# ── Kubernetes (kind) — testing ───────────────────────────────────────────────
+
+kind-seed: ## Seed E2E test user into the running kind deployment
+	kubectl exec -n $(KIND_NS) deployment/$(KIND_DEPLOYMENT) -- node /app/scripts/kind-seed.mjs
+
+kind-test: ## Run Vitest API integration tests (in-process, against local code)
+	npm test
+
+kind-test-e2e: kind-seed ## Run Playwright E2E tests against the kind deployment (localhost:30000)
+	npx playwright test --config playwright.kind.config.ts
+
+kind-test-all: kind-test kind-test-e2e ## Run full test suite against the kind deployment
 
 # ── Housekeeping ──────────────────────────────────────────────────────────────
 

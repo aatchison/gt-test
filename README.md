@@ -31,8 +31,8 @@ A full-stack Next.js 14 web application with authentication and SQLite.
 ### 1. Using DevPod (recommended)
 
 ```bash
-# Add the Docker provider (first time only)
-devpod-cli provider add docker
+# Install DevPod and add Docker provider (first time only)
+make devpod-init
 
 # Start the container
 make devpod-up
@@ -45,6 +45,12 @@ Once inside the container, run first-time setup:
 
 ```bash
 make setup
+```
+
+Or run it remotely:
+
+```bash
+make devpod-install
 ```
 
 This creates `.env` with a generated `AUTH_SECRET`, installs npm packages, and installs the Playwright Chromium browser.
@@ -77,11 +83,20 @@ Run `make` (no arguments) to list all available targets:
   test-e2e-headed        Run Playwright E2E tests with visible browser
   test-all               Run all tests (Vitest + Playwright)
   db-generate            Generate Drizzle migration files from schema changes
-  db-migrate             Apply pending Drizzle migrations
+  db-migrate            Apply pending Drizzle migrations
   db-studio              Open Drizzle Studio (visual database browser)
+  db-push                Push schema to database (creates/updates tables)
+  devpod-init            Install DevPod CLI and add Docker provider
   devpod-up              Start (or resume) the DevPod container
+  devpod-start           Start an existing DevPod workspace
+  devpod-stop            Stop the DevPod container
   devpod-rebuild         Rebuild the DevPod container from scratch
   devpod-ssh             SSH into the running DevPod container
+  devpod-install         Run full setup inside the DevPod container
+  devpod-test            Run tests in the DevPod container
+  devpod-lint            Run lint in the DevPod container
+  devpod-status          Check DevPod workspace status
+  devpod-delete          Delete the DevPod workspace
   kind-create            Create local kind cluster
   kind-delete            Delete local kind cluster
   kind-status            Show cluster info
@@ -104,30 +119,40 @@ Run `make` (no arguments) to list all available targets:
 
 **Start developing (first time):**
 ```bash
-make devpod-up    # start container (host)
-make devpod-ssh   # enter container (host)
-make setup        # install deps, generate .env, install Playwright
-make dev          # start dev server (inside container)
+make devpod-init   # install DevPod + Docker provider (first time only)
+make devpod-up     # start container (host)
+make devpod-ssh    # enter container (host)
+make setup         # install deps, generate .env, install Playwright
+make dev           # start dev server (inside container)
+```
+
+**Quick remote workflow (from host):**
+```bash
+make devpod-install  # setup inside container
+make devpod-test     # run tests inside container
+make devpod-lint     # run lint inside container
 ```
 
 **Resume after restart:**
 ```bash
-make devpod-up    # resume container
-make devpod-ssh   # enter container
-make dev          # deps already installed
+make devpod-up     # resume container
+make devpod-ssh    # enter container
+make dev           # deps already installed
 ```
 
-**Run tests:**
+**Run tests (inside container):**
 ```bash
-make test         # Vitest API tests
-make test-e2e     # Playwright E2E tests
-make test-all     # both
+make test          # Vitest API tests
+make test-e2e      # Playwright E2E tests
+make test-all      # both
 ```
 
 **After changing the DB schema:**
 ```bash
-make db-generate  # generate migration
-make db-migrate   # apply it
+make db-push       # push schema changes to database
+# OR
+make db-generate   # generate migration file
+make db-migrate    # apply migration
 ```
 
 **Before shipping:**
@@ -137,9 +162,12 @@ make test-all
 make build
 ```
 
-**Rebuild the container** (e.g. after changing `devcontainer.json`):
+**DevPod management:**
 ```bash
-make devpod-rebuild
+make devpod-status    # check workspace status
+make devpod-stop      # stop container
+make devpod-rebuild   # rebuild from scratch (after devcontainer.json changes)
+make devpod-delete    # delete workspace
 ```
 
 ---

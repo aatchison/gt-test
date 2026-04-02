@@ -11,8 +11,20 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 
+const MAX_BODY_SIZE = 1024;
+
 export async function POST(req: NextRequest) {
-  // Rate limiting — use the forwarded IP or fall back to a constant key
+  const contentLength = req.headers.get("content-length");
+  if (
+    contentLength &&
+    parseInt(contentLength, 10) > MAX_BODY_SIZE
+  ) {
+    return NextResponse.json(
+      { error: "Request body too large." },
+      { status: 413 }
+    );
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   if (!checkRateLimit(`register:${ip}`, RATE_LIMIT, RATE_WINDOW_MS)) {

@@ -15,6 +15,19 @@ function enforceHttps(req: NextRequest) {
   return null;
 }
 
+// Enforce HTTPS in production
+function enforceHttps(req: any) {
+  if (process.env.NODE_ENV === "production") {
+    const proto = req.headers.get("x-forwarded-proto") ?? "http";
+    if (proto !== "https") {
+      const url = req.nextUrl.clone();
+      url.protocol = "https";
+      return NextResponse.redirect(url);
+    }
+  }
+  return null;
+}
+
 const PUBLIC_PATHS = ["/login", "/register", "/api/auth"];
 
 export default auth((req) => {

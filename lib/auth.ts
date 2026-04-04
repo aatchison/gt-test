@@ -11,7 +11,7 @@ async function generateDummyHash() {
 
 async function resetLoginAttempts(userId: string): Promise<void> {
   const { db } = await import("@/lib/db");
-  const { users } = await import("@/lib/db/schema");
+  const { users } = await import("@lib/db/schema");
   const { eq } = await import("drizzle-orm");
   await db
     .update(users)
@@ -24,7 +24,7 @@ async function incrementLoginAttempts(
   currentAttempts: number | null
 ): Promise<void> {
   const { db } = await import("@/lib/db");
-  const { users } = await import("@/lib/db/schema");
+  const { users } = await import("@lib/db/schema");
   const { eq } = await import("drizzle-orm");
   const attempts = (currentAttempts ?? 0) + 1;
   const lockedUntil =
@@ -51,7 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
 
         const { db } = await import("@/lib/db");
-        const { users } = await import("@/lib/db/schema");
+        const { users } = await import("@lib/db/schema");
         const { eq } = await import("drizzle-orm");
         const bcrypt = await import("bcryptjs");
 

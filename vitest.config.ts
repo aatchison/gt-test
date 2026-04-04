@@ -1,8 +1,8 @@
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths";
+// No need for vite-tsconfig-paths plugin – Vite resolves tsconfig paths natively
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [], // tsconfig paths resolved natively
   test: {
     environment: "node",
     setupFiles: ["./tests/setup.ts"],
@@ -13,8 +13,6 @@ export default defineConfig({
     },
     include: ["tests/api/**/*.test.ts"],
     pool: "forks",       // required: better-sqlite3 is not thread-safe
-    poolOptions: {
-      forks: { singleFork: true }, // serialize all test files
-    },
+// poolOptions removed per Vitest 4 migration – no longer needed
   },
 });

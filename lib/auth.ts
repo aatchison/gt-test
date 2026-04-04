@@ -1,12 +1,19 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+
+import crypto from "crypto";
+
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
-const DUMMY_HASH =
-  "$2a$12$LHDiLCLdUmEWBMIw4GfMsOf9eGlpJeprjPE7bFJuN4cTHrIv6xzq6";
+// Generate a random dummy hash for non‑existent users to mitigate timing attacks
+async function generateDummyHash() {
+  // bcrypt hash of a random string; 12 rounds matches real hash cost
+  const random = crypto.randomBytes(16).toString("hex");
+  return await bcrypt.hash(random, 12);
+}
 
 const MAX_LOGIN_ATTEMPTS = 10;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -51,7 +58,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+      async authorize(credentials: Record<string, unknown>) {
         if (!credentials?.email || !credentials?.password) return null;
 
         const normalizedEmail = (credentials.email as string)
@@ -64,7 +72,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .where(eq(users.email, normalizedEmail))
           .get();
 
-        const passwordHash = user?.passwordHash ?? DUMMY_HASH;
+        let passwordHash: string;
+        if (user?.passwordHash) {
+          passwordHash = user.passwordHash;
+        } else {
+          passwordHash = await generateDummyHash();
+        }
         const isValidPassword = await bcrypt.compare(
           credentials.password as string,
           passwordHash
@@ -107,11 +120,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user }: { token: any; user?: any }) {
       if (user) token.id = user.id;
       return token;
     },
-    session({ session, token }) {
+    session({ session, token }: { session: any; token: any }) {
       if (token.id) session.user.id = token.id as string;
       return session;
     },

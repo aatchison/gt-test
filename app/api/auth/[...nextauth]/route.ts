@@ -13,7 +13,7 @@ function getClientIP(req: NextRequest): string {
   );
 }
 
-const { GET, POST } = handlers;
+const { GET, POST: authPOST } = handlers;
 
 export async function POST(req: NextRequest) {
   const ip = getClientIP(req);
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return POST(req);
+  return authPOST(req);
 }
 
 export { GET };

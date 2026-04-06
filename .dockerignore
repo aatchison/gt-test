@@ -5,3 +5,4 @@ node_modules
 .devcontainer
 playwright-report
 test-results
+docs/

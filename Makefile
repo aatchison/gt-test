@@ -13,8 +13,10 @@
 # Default target
 .DEFAULT_GOAL := help
 
-KIND_APP_IMAGE := gttest-app:local
-KIND_NS        := gttest
+KIND_APP_IMAGE   := gttest-app:local
+KIND_CLUSTER     := gttest
+KIND_NS          := gttest
+KIND_DEPLOYMENT  := gttest-app
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) \
@@ -110,10 +112,10 @@ kind-create: ## Create local kind cluster
 	kind create cluster --config kind-config.yaml
 
 kind-delete: ## Delete local kind cluster
-	kind delete cluster --name gttest
+	kind delete cluster --name $(KIND_CLUSTER)
 
 kind-status: ## Show cluster info
-	kubectl cluster-info --context kind-gttest
+	kubectl cluster-info --context kind-$(KIND_CLUSTER)
 
 kind-reset: kind-delete kind-create ## Delete and recreate cluster
 
@@ -123,18 +125,18 @@ kind-build: ## Build the app Docker image
 	docker build -t $(KIND_APP_IMAGE) .
 
 kind-load: ## Load the app image into the kind cluster
-	kind load docker-image $(KIND_APP_IMAGE) --name gttest
+	kind load docker-image $(KIND_APP_IMAGE) --name $(KIND_CLUSTER)
 
 kind-apply: ## Apply Kubernetes manifests (namespace + deployment + service)
 	kubectl apply -f k8s/
 
 kind-rollout: ## Wait for the app deployment to become ready
-	kubectl rollout status deployment/gttest-app -n $(KIND_NS) --timeout=120s
+	kubectl rollout status deployment/$(KIND_DEPLOYMENT) -n $(KIND_NS) --timeout=120s
 
 kind-deploy: kind-build kind-load kind-apply kind-rollout ## Full deploy: build → load → apply → wait
 
 kind-logs: ## Tail app logs from the running pod
-	kubectl logs -n $(KIND_NS) deployment/gttest-app -f
+	kubectl logs -n $(KIND_NS) deployment/$(KIND_DEPLOYMENT) -f
 
 kind-teardown: ## Remove all deployed Kubernetes resources
 	kubectl delete -f k8s/ --ignore-not-found
@@ -142,7 +144,7 @@ kind-teardown: ## Remove all deployed Kubernetes resources
 # ── Kubernetes (kind) — testing ───────────────────────────────────────────────
 
 kind-seed: ## Seed E2E test user into the running kind deployment
-	kubectl exec -n $(KIND_NS) deployment/gttest-app -- node /app/scripts/kind-seed.mjs
+	kubectl exec -n $(KIND_NS) deployment/$(KIND_DEPLOYMENT) -- node /app/scripts/kind-seed.mjs
 
 kind-test: ## Run Vitest API integration tests (in-process, against local code)
 	npm test

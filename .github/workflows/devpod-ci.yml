@@ -26,6 +26,8 @@ jobs:
         run: |
           curl -Ls https://download.devpod.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Force execution from the path where it was installed for the current shell
+          echo "export PATH=\$PATH:\$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Add Docker provider
         run: devpod provider add docker || true
@@ -54,6 +56,8 @@ jobs:
         run: |
           curl -Ls https://download.devpod.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Force execution from the path where it was installed for the current shell
+          echo "export PATH=\$PATH:\$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Resume workspace
         run: devpod up --provider ${{ env.DEVPOD_PROVIDER }} --ide none --id ${{ env.DEVPOD_WORKSPACE }} . || true
@@ -77,6 +81,8 @@ jobs:
         run: |
           curl -Ls https://download.devpod.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Force execution from the path where it was installed for the current shell
+          echo "export PATH=\$PATH:\$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Resume workspace
         run: devpod up --provider ${{ env.DEVPOD_PROVIDER }} --ide none --id ${{ env.DEVPOD_WORKSPACE }} . || true
@@ -104,6 +110,8 @@ jobs:
         run: |
           curl -Ls https://download.devpod.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Force execution from the path where it was installed for the current shell
+          echo "export PATH=\$PATH:\$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Resume workspace
         run: devpod up --provider ${{ env.DEVPOD_PROVIDER }} --ide none --id ${{ env.DEVPOD_WORKSPACE }} . || true
@@ -143,6 +151,8 @@ jobs:
         run: |
           curl -Ls https://download.devpod.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Force execution from the path where it was installed for the current shell
+          echo "export PATH=\$PATH:\$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Resume workspace
         run: devpod up --provider ${{ env.DEVPOD_PROVIDER }} --ide none --id ${{ env.DEVPOD_WORKSPACE }} . || true
@@ -166,6 +176,8 @@ jobs:
         run: |
           curl -Ls https://download.devpod.sh | sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Force execution from the path where it was installed for the current shell
+          echo "export PATH=\$PATH:\$HOME/.local/bin" >> $GITHUB_ENV
 
       - name: Resume workspace
         run: devpod up --provider ${{ env.DEVPOD_PROVIDER }} --ide none --id ${{ env.DEVPOD_WORKSPACE }} . || true

@@ -5,20 +5,7 @@ import { NextRequest } from "next/server";
 // Enforce HTTPS in production
 function enforceHttps(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
-    const proto = req.headers.get("x-forwarded-proto") ?? "http";
-    if (proto !== "https") {
-      const url = req.nextUrl.clone();
-      url.protocol = "https";
-      return NextResponse.redirect(url);
-    }
-  }
-  return null;
-}
-
-// Enforce HTTPS in production
-function enforceHttps(req: any) {
-  if (process.env.NODE_ENV === "production") {
-    const proto = req.headers.get("x-forwarded-proto") ?? "http";
+    const proto = req.headers.get("x-//fixed-fixed-proto") ?? "http";
     if (proto !== "https") {
       const url = req.nextUrl.clone();
       url.protocol = "https";

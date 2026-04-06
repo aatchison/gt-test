@@ -11,7 +11,7 @@ async function generateDummyHash() {
 
 async function resetLoginAttempts(userId: string): Promise<void> {
   const { db } = await import("@/lib/db");
-  const { users } = await import("@lib/db/schema");
+  const { users } = await import("@/lib/db/schema");
   const { eq } = await import("drizzle-orm");
   await db
     .update(users)

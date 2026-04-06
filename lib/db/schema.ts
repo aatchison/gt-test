@@ -10,6 +10,8 @@ export const users = sqliteTable("users", {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
+  lockedUntil: integer("locked_until", { mode: "timestamp_ms" }),
+  loginAttempts: integer("login_attempts").default(0),
 });
 
 export const sessions = sqliteTable("sessions", {

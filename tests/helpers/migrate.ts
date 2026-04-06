@@ -13,7 +13,9 @@ export function createTables(sqlite: Database): void {
       email_verified INTEGER,
       image TEXT,
       password_hash TEXT,
-      created_at INTEGER NOT NULL
+      created_at INTEGER NOT NULL,
+      locked_until INTEGER,
+      login_attempts INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS sessions (

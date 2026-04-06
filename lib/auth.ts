@@ -1,16 +1,45 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
+import { authConfig } from "@/lib/auth.config";
 
-// Precomputed hash used when the email is not found, to prevent timing attacks
-// that could reveal whether an account exists for a given email.
-const DUMMY_HASH =
-  "$2a$12$LHDiLCLdUmEWBMIw4GfMsOf9eGlpJeprjPE7bFJuN4cTHrIv6xzq6";
+async function generateDummyHash() {
+  const crypto = await import("crypto");
+  const bcrypt = await import("bcryptjs");
+  const random = crypto.default.randomBytes(16).toString("hex");
+  return await bcrypt.default.hash(random, 12);
+}
+
+async function resetLoginAttempts(userId: string): Promise<void> {
+  const { db } = await import("@/lib/db");
+  const { users } = await import("@/lib/db/schema");
+  const { eq } = await import("drizzle-orm");
+  await db
+    .update(users)
+    .set({ loginAttempts: 0, lockedUntil: null })
+    .where(eq(users.id, userId));
+}
+
+async function incrementLoginAttempts(
+  userId: string,
+  currentAttempts: number | null
+): Promise<void> {
+  const { db } = await import("@/lib/db");
+  const { users } = await import("@/lib/db/schema");
+  const { eq } = await import("drizzle-orm");
+  const attempts = (currentAttempts ?? 0) + 1;
+  const lockedUntil =
+    attempts >= 10
+      ? new Date(Date.now() + 15 * 60 * 1000)
+      : null;
+
+  await db
+    .update(users)
+    .set({ loginAttempts: attempts, lockedUntil })
+    .where(eq(users.id, userId));
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       name: "credentials",
@@ -18,10 +47,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: Record<string, unknown>) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        // Normalize email so login works regardless of capitalisation
+        const { db } = await import("@/lib/db");
+        const { users } = await import("@/lib/db/schema");
+        const { eq } = await import("drizzle-orm");
+        const bcrypt = await import("bcryptjs");
+
         const normalizedEmail = (credentials.email as string)
           .trim()
           .toLowerCase();
@@ -32,13 +65,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .where(eq(users.email, normalizedEmail))
           .get();
 
-        // Always run bcrypt.compare to prevent timing-based user enumeration
-        const valid = await bcrypt.compare(
+        let passwordHash: string;
+        if (user?.passwordHash) {
+          passwordHash = user.passwordHash;
+        } else {
+          passwordHash = await generateDummyHash();
+        }
+        const isValidPassword = await bcrypt.default.compare(
           credentials.password as string,
-          user?.passwordHash ?? DUMMY_HASH
+          passwordHash
         );
 
-        if (!user || !valid) return null;
+        if (!user) {
+          await new Promise((r) => setTimeout(r, 100 + Math.random() * 50));
+          return null;
+        }
+
+        if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
+          await new Promise((r) => setTimeout(r, 100 + Math.random() * 50));
+          return null;
+        }
+
+        if (!user.emailVerified) {
+          await new Promise((r) => setTimeout(r, 100 + Math.random() * 50));
+          return null;
+        }
+
+        if (!isValidPassword) {
+          await incrementLoginAttempts(user.id, user.loginAttempts);
+          await new Promise((r) => setTimeout(r, 100 + Math.random() * 50));
+          return null;
+        }
+
+        if (user.loginAttempts && user.loginAttempts > 0) {
+          await resetLoginAttempts(user.id);
+        }
 
         return {
           id: user.id,
@@ -49,18 +110,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user }: { token: any; user?: any }) {
       if (user) token.id = user.id;
       return token;
     },
-    session({ session, token }) {
+    session({ session, token }: { session: any; token: any }) {
       if (token.id) session.user.id = token.id as string;
       return session;
     },
   },
-});
+  cookies: {
+    sessionToken: {
+      name: "__Secure-authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+      },
+    },
+  },
+  trustHost: true,
+})
+;

@@ -2,8 +2,10 @@
         dev build start lint typecheck audit \
         test test-watch \
         test-e2e test-e2e-ui test-e2e-headed test-all \
-        db-generate db-migrate db-studio \
-        devpod-up devpod-ssh devpod-rebuild \
+        db-generate db-migrate db-studio db-push \
+        devpod-init devpod-up devpod-start devpod-stop \
+        devpod-rebuild devpod-ssh devpod-install devpod-test \
+        devpod-lint devpod-status devpod-delete \
         kind-create kind-delete kind-status kind-reset \
         kind-build kind-load kind-apply kind-rollout kind-deploy \
         kind-seed kind-test kind-test-e2e kind-test-all \
@@ -57,7 +59,7 @@ start: ## Start the production server (requires build first)
 	npm run start
 
 lint: ## Run ESLint
-	npm run lint
+	npx eslint .
 
 typecheck: ## Run TypeScript type-check (no emit)
 	npx tsc --noEmit
@@ -95,20 +97,62 @@ db-migrate: ## Apply pending Drizzle migrations
 db-studio: ## Open Drizzle Studio (visual database browser)
 	npm run db:studio
 
+db-push: ## Push schema to database (creates/updates tables)
+	npx drizzle-kit push
+
 # ── DevPod ────────────────────────────────────────────────────────────────────
 
+DEVPOD_WORKSPACE := gt-test
+DEVPOD_PROVIDER := docker
+
+devpod-init: ## Install DevPod CLI and add Docker provider (if not already installed)
+	@if ! command -v devpod &> /dev/null; then \
+		echo "Installing DevPod..."; \
+		curl -Ls https://download.devpod.sh | sh; \
+	fi
+	@if ! devpod provider list 2>/dev/null | grep -q "$(DEVPOD_PROVIDER)"; then \
+		echo "Adding Docker provider..."; \
+		devpod provider add $(DEVPOD_PROVIDER); \
+	fi
+	@echo "DevPod is ready."
+
 devpod-up: ## Start (or resume) the DevPod container
-	devpod-cli up . --provider docker --ide none
+	@devpod provider add $(DEVPOD_PROVIDER) 2>/dev/null || true
+	devpod up --provider $(DEVPOD_PROVIDER) --ide none .
+
+devpod-start: ## Start an existing DevPod workspace
+	devpod start $(DEVPOD_WORKSPACE)
+
+devpod-stop: ## Stop the DevPod container
+	devpod stop $(DEVPOD_WORKSPACE)
 
 devpod-rebuild: ## Rebuild the DevPod container from scratch
-	devpod-cli up . --provider docker --ide none --recreate
+	@devpod provider add $(DEVPOD_PROVIDER) 2>/dev/null || true
+	devpod up --provider $(DEVPOD_PROVIDER) --ide none --recreate .
 
 devpod-ssh: ## SSH into the running DevPod container
-	ssh rig.devpod
+	@devpod ssh $(DEVPOD_WORKSPACE)
+
+devpod-install: ## Run full setup inside the DevPod container
+	@devpod ssh $(DEVPOD_WORKSPACE) --command "cd /workspaces/$(DEVPOD_WORKSPACE) && make setup"
+
+devpod-test: ## Run tests in the DevPod container
+	@devpod ssh $(DEVPOD_WORKSPACE) --command "cd /workspaces/$(DEVPOD_WORKSPACE) && make test"
+
+devpod-lint: ## Run lint in the DevPod container
+	@devpod ssh $(DEVPOD_WORKSPACE) --command "cd /workspaces/$(DEVPOD_WORKSPACE) && make lint"
+
+devpod-status: ## Check DevPod workspace status
+	@devpod status $(DEVPOD_WORKSPACE)
+
+devpod-delete: ## Delete the DevPod workspace
+	@echo "Deleting workspace '$(DEVPOD_WORKSPACE)'..."; \
+	devpod delete $(DEVPOD_WORKSPACE)
 
 # ── Kubernetes (kind) — cluster lifecycle ─────────────────────────────────────
 
 kind-create: ## Create local kind cluster
+	@./scripts/wait-for-docker.sh
 	kind create cluster --config kind-config.yaml
 
 kind-delete: ## Delete local kind cluster

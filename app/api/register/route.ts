@@ -4,6 +4,7 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { generateVerificationToken } from "@/lib/verification";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -11,8 +12,20 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 
+const MAX_BODY_SIZE = 1024;
+
 export async function POST(req: NextRequest) {
-  // Rate limiting — use the forwarded IP or fall back to a constant key
+  const contentLength = req.headers.get("content-length");
+  if (
+    contentLength &&
+    parseInt(contentLength, 10) > MAX_BODY_SIZE
+  ) {
+    return NextResponse.json(
+      { error: "Request body too large." },
+      { status: 413 }
+    );
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   if (!checkRateLimit(`register:${ip}`, RATE_LIMIT, RATE_WINDOW_MS)) {
@@ -84,12 +97,18 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-
+  
   await db.insert(users).values({
     name: typeof name === "string" ? name.trim() || null : null,
     email: normalizedEmail,
     passwordHash,
   });
 
-  return NextResponse.json({ success: true }, { status: 201 });
+  // Generate and "send" verification email
+  await generateVerificationToken(normalizedEmail);
+
+  return NextResponse.json({ 
+    success: true, 
+    message: "Account created. Please check your email to verify your account." 
+  }, { status: 201 });
 }

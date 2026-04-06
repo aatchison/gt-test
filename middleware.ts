@@ -1,8 +1,9 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 // Enforce HTTPS in production
-function enforceHttps(req: any) {
+function enforceHttps(req: NextRequest) {
   if (process.env.NODE_ENV === "production") {
     const proto = req.headers.get("x-forwarded-proto") ?? "http";
     if (proto !== "https") {
@@ -39,3 +40,4 @@ export default auth((req) => {
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
+

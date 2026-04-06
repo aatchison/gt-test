@@ -59,7 +59,7 @@ start: ## Start the production server (requires build first)
 	npm run start
 
 lint: ## Run ESLint
-	npm run lint
+	npx eslint .
 
 typecheck: ## Run TypeScript type-check (no emit)
 	npx tsc --noEmit

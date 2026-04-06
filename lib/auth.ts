@@ -1,33 +1,18 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { authConfig } from "@/lib/auth.config";
 
-import crypto from "crypto";
-
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
-
-// Generate a random dummy hash for non‑existent users to mitigate timing attacks
 async function generateDummyHash() {
-  // bcrypt hash of a random string; 12 rounds matches real hash cost
-  const random = crypto.randomBytes(16).toString("hex");
-  return await bcrypt.hash(random, 12);
-}
-
-const MAX_LOGIN_ATTEMPTS = 10;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
-
-function constantTimeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
+  const crypto = await import("crypto");
+  const bcrypt = await import("bcryptjs");
+  const random = crypto.default.randomBytes(16).toString("hex");
+  return await bcrypt.default.hash(random, 12);
 }
 
 async function resetLoginAttempts(userId: string): Promise<void> {
+  const { db } = await import("@/lib/db");
+  const { users } = await import("@/lib/db/schema");
+  const { eq } = await import("drizzle-orm");
   await db
     .update(users)
     .set({ loginAttempts: 0, lockedUntil: null })
@@ -38,10 +23,13 @@ async function incrementLoginAttempts(
   userId: string,
   currentAttempts: number | null
 ): Promise<void> {
+  const { db } = await import("@/lib/db");
+  const { users } = await import("@/lib/db/schema");
+  const { eq } = await import("drizzle-orm");
   const attempts = (currentAttempts ?? 0) + 1;
   const lockedUntil =
-    attempts >= MAX_LOGIN_ATTEMPTS
-      ? new Date(Date.now() + LOCKOUT_DURATION_MS)
+    attempts >= 10
+      ? new Date(Date.now() + 15 * 60 * 1000)
       : null;
 
   await db
@@ -51,6 +39,7 @@ async function incrementLoginAttempts(
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       name: "credentials",
@@ -58,9 +47,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
       async authorize(credentials: Record<string, unknown>) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        const { db } = await import("@/lib/db");
+        const { users } = await import("@/lib/db/schema");
+        const { eq } = await import("drizzle-orm");
+        const bcrypt = await import("bcryptjs");
 
         const normalizedEmail = (credentials.email as string)
           .trim()
@@ -78,7 +71,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         } else {
           passwordHash = await generateDummyHash();
         }
-        const isValidPassword = await bcrypt.compare(
+        const isValidPassword = await bcrypt.default.compare(
           credentials.password as string,
           passwordHash
         );
@@ -117,13 +110,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60,
-  },
-  pages: {
-    signIn: "/login",
-  },
   callbacks: {
     jwt({ token, user }: { token: any; user?: any }) {
       if (user) token.id = user.id;
@@ -146,4 +132,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   trustHost: true,
-});
+})
+;

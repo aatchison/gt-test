@@ -4,6 +4,7 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { generateVerificationToken } from "@/lib/verification";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -96,12 +97,18 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-
+  
   await db.insert(users).values({
     name: typeof name === "string" ? name.trim() || null : null,
     email: normalizedEmail,
     passwordHash,
   });
 
-  return NextResponse.json({ success: true }, { status: 201 });
+  // Generate and "send" verification email
+  await generateVerificationToken(normalizedEmail);
+
+  return NextResponse.json({ 
+    success: true, 
+    message: "Account created. Please check your email to verify your account." 
+  }, { status: 201 });
 }

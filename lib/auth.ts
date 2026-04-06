@@ -93,6 +93,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        if (!user.emailVerified) {
+          await new Promise((r) => setTimeout(r, 100 + Math.random() * 50));
+          return null;
+        }
+
         if (!isValidPassword) {
           await incrementLoginAttempts(user.id, user.loginAttempts);
           await new Promise((r) => setTimeout(r, 100 + Math.random() * 50));

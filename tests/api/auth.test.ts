@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { POST as register } from "@/app/api/register/route";
 
 // Seed a known user before auth tests
-async function seedUser(email: string, password: string) {
+async function seedUser(email: string, password: string, verified = false) {
   const req = new NextRequest("http://localhost/api/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -12,6 +12,13 @@ async function seedUser(email: string, password: string) {
   const res = await register(req);
   if (res.status !== 201) {
     throw new Error(`Seed failed: ${res.status} ${await res.text()}`);
+  }
+
+  if (verified) {
+    const { db } = await import("@/lib/db");
+    const { users } = await import("@/lib/db/schema");
+    const { eq } = await import("drizzle-orm");
+    await db.update(users).set({ emailVerified: new Date() }).where(eq(users.email, email));
   }
 }
 
@@ -49,7 +56,7 @@ describe("NextAuth credentials authorize", () => {
   const TEST_PASSWORD = "TestPassword1!";
 
   beforeEach(async () => {
-    await seedUser(TEST_EMAIL, TEST_PASSWORD);
+    await seedUser(TEST_EMAIL, TEST_PASSWORD, true);
   });
 
   it("authorize accepts correct credentials via lib/auth", async () => {

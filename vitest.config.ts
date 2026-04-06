@@ -1,8 +1,9 @@
+import viteTsConfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 // No need for vite-tsconfig-paths plugin – Vite resolves tsconfig paths natively
  
 export default defineConfig({
-  plugins: [], // tsconfig paths resolved natively
+  plugins: [viteTsConfigPaths()], // tsconfig paths resolved natively
   test: {
     environment: "node",
     setupFiles: ["./tests/setup.ts"],

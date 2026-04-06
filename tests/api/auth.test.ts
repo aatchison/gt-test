@@ -11,14 +11,18 @@ async function seedUser(email: string, password: string, verified = false) {
   });
   const res = await register(req);
   if (res.status !== 201) {
-    throw new Error(`Seed failed: ${res.status} ${await res.text()}`);
+    const text = await res.text();
+    console.error(`Seed failed for ${email}: ${res.status} ${text}`);
+    throw new Error(`Seed failed: ${res.status} ${text}`);
   }
+  console.log(`Successfully seeded user: ${email}`);
 
   if (verified) {
     const { db } = await import("@/lib/db");
     const { users } = await import("@/lib/db/schema");
     const { eq } = await import("drizzle-orm");
     await db.update(users).set({ emailVerified: new Date() }).where(eq(users.email, email));
+    console.log(`Marked user ${email} as verified`);
   }
 }
 
@@ -37,17 +41,23 @@ describe("Registration → DB state", () => {
   });
 
   it("password is not stored in plaintext", async () => {
-    await seedUser("carol@example.com", "MyPassword99!");
+    const email = "carol@example.com";
+    const password = "MyPassword99!";
+    await seedUser(email, password);
 
-    // Verify by checking the user is retrievable (409 on dup) but not testing raw DB value here.
-    // The bcrypt.hash call in the route ensures hashing — this is a smoke check.
-    const req = new NextRequest("http://localhost/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "carol@example.com", password: "DifferentPass1!" }),
-    });
-    const res = await register(req);
-    expect(res.status).toBe(409); // user exists → duplicate, not auth error
+    const { db } = await import("@/lib/db");
+    const { users } = await import("@/lib/db/schema");
+    const { eq } = await import("drizzle-orm");
+
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .get();
+
+    expect(user).toBeTruthy();
+    expect(user!.passwordHash).not.toBe(password);
+    expect(user!.passwordHash?.length).toBeGreaterThan(20);
   });
 });
 

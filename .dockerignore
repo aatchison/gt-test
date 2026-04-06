@@ -1,0 +1,8 @@
+node_modules
+.next
+*.db
+.git
+.devcontainer
+playwright-report
+test-results
+docs/

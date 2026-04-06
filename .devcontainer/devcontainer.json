@@ -1,6 +1,19 @@
 {
-  "name": "Next.js Full-Stack",
+  "name": "gt-test",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true",
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    }
+  },
+  "postCreateCommand": "KIND_VERSION=v0.27.0 && curl --fail --location --silent --show-error -o /tmp/kind-linux-amd64 \"https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64\" && curl --fail --location --silent --show-error -o /tmp/kind-linux-amd64.sha256sum \"https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64.sha256sum\" && (cd /tmp && sha256sum -c kind-linux-amd64.sha256sum) && chmod +x /tmp/kind-linux-amd64 && sudo mv /tmp/kind-linux-amd64 /usr/local/bin/kind",
   "forwardPorts": [3000, 3001],
   "customizations": {
     "vscode": {
@@ -8,8 +21,9 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
-        "prisma.prisma",
-        "ms-azuretools.vscode-docker"
+        "Prisma.prisma",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
       ],
       "settings": {
         "editor.formatOnSave": true,

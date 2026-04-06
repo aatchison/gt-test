@@ -35,10 +35,6 @@ jobs:
           cacheFrom: ${{ env.DEVCONTAINER_IMAGE }}
           push: filter
           refFilterForPush: refs/heads/main
-          runCmd: |
-            make setup
-            make kind-create
-            make kind-deploy
-            make kind-test-all
+          runCmd: make ci-kind
           env: |
             CI=true

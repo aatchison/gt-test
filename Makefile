@@ -8,9 +8,11 @@
         devpod-lint devpod-status devpod-delete \
         kind-create kind-delete kind-status kind-reset \
         kind-build kind-load kind-apply kind-rollout kind-deploy \
-        kind-seed kind-test kind-test-e2e kind-test-all \
+        kind-seed kind-test kind-test-all \
         kind-logs kind-teardown \
+        ci ci-local ci-kind \
         clean
+
 
 # Default target
 .DEFAULT_GOAL := help
@@ -198,7 +200,36 @@ kind-test-e2e: kind-seed ## Run Playwright E2E tests against the kind deployment
 
 kind-test-all: kind-test kind-test-e2e ## Run full test suite against the kind deployment
 
-# ── Housekeeping ──────────────────────────────────────────────────────────────
+
+# ── CI/CD ────────────────────────────────────────────────────────────────────────
+
+ci: ## Full CI suite (lint, typecheck, audit, build, test, e2e)
+	@echo "Running Full CI..."
+	make setup
+	make lint
+	make typecheck
+	make audit
+	make build
+	make test
+	make test-e2e
+
+ci-local: ## Local CI (skips docker-in-docker/kind requirements)
+	@echo "Running Local CI..."
+	make setup
+	make lint
+	make typecheck
+	make audit
+	make build
+	make test
+	make test-e2e
+
+ci-kind: ## Full CI including kind integration (requires docker/kind)
+	@echo "Running Full CI with Kind integration..."
+	make setup
+	make ci
+	make kind-create
+	make kind-deploy
+	make kind-test-all
 
 clean: ## Remove build artifacts and caches
 	rm -rf .next out playwright-report test-results node_modules/.cache

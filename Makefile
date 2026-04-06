@@ -152,6 +152,7 @@ devpod-delete: ## Delete the DevPod workspace
 # ── Kubernetes (kind) — cluster lifecycle ─────────────────────────────────────
 
 kind-create: ## Create local kind cluster
+	@./scripts/wait-for-docker.sh
 	kind create cluster --config kind-config.yaml
 
 kind-delete: ## Delete local kind cluster
